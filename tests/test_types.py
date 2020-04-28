@@ -3,6 +3,9 @@ Unit-tests for integration of custom types with the argparser.
 """
 
 import unittest
+import datetime
+import pathlib
+import ipaddress
 from enum import Enum
 
 from apegears import ArgumentParser as AP, register_spec
@@ -186,6 +189,43 @@ class TypeIntegrationTest(unittest.TestCase):
                          {'k1': Enum1.foo, 'k2': Enum1.bar})
         self.assertRaises(SystemExit, P, 'x', type=Enum1, cli_args='-x k1=no-such-value')
         # note: dict with choices is not supported
+
+    ################################################################################
+    # test predefined integration with standard python types
+
+    def test_date(self):
+        d = datetime.date(1999, 8, 7)
+        self.assertEqual(self._parse('positional', type='date', cli_args='%s' % d).date, d)
+        self.assertEqual(self._parse('list', type='date', cli_args='--date %s' % d).date, [d])
+
+    def test_datetime(self):
+        t = datetime.datetime(1999, 8, 7, 3, 4, 5)
+        tstr = t.strftime('%Y-%m-%dT%H:%M:%S')
+        self.assertEqual(
+            self._parse('positional', type='datetime', cli_args='%s' % tstr).timestamp, t)
+        self.assertEqual(
+            self._parse('list', type='datetime', cli_args='--timestamp %s' % tstr).timestamp, [t])
+
+    def test_regex(self):
+        regex = '.x.'
+        match = '1x1'
+        nomatch = '121'
+        r = self._parse('positional', type='regex', cli_args='%s' % regex).regex
+        self.assertTrue(r.match(match))
+        self.assertIsNone(r.match(nomatch))
+
+    def test_path(self):
+        p = 'a/b/c.zip'
+        self.assertEqual(
+            self._parse('positional', type='path', cli_args=p).path, pathlib.Path(p))
+
+    def test_ipaddr(self):
+        self.assertTrue(isinstance(
+            self._parse('positional', type='ipaddress', cli_args='192.168.0.1').ip,
+            ipaddress.IPv4Address))
+        self.assertTrue(isinstance(
+            self._parse('positional', type='ipaddress', cli_args='2001:db8::').ip,
+            ipaddress.IPv6Address))
 
     ################################################################################
 

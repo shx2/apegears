@@ -110,7 +110,6 @@ def gen_enum_spec(cls, **kwargs):
     kw = dict(
         from_string=enum_value_type,
         choices=list(cls),
-        #metavar=cls.__name__,
     )
     kw.update(kwargs)
     return ArgParseSpec(**kw)
