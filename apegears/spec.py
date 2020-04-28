@@ -1,0 +1,119 @@
+"""
+TBD
+"""
+
+from enum import Enum
+
+
+################################################################################
+
+_SPEC_REGISTRY = {}
+
+
+################################################################################
+
+class ArgParseSpec:
+    """
+    TBD
+    TBD mention default, from_string, names
+    """
+
+    EMPTY = object()
+
+    def __init__(self,
+                 names=EMPTY, default=EMPTY, from_string=EMPTY,
+                 choices=EMPTY, help=EMPTY, metavar=EMPTY):
+        self.names = names
+        self.default = default
+        self.from_string = from_string
+        self.choices = choices
+        self.help = help
+        self.metavar = metavar
+
+    @property
+    def __argparse__(self):
+        return self
+
+
+def find_spec(cls):
+    # first try the registy
+    try:
+        return _SPEC_REGISTRY[cls]
+    except KeyError:
+        pass
+    # look for __argparse__ attribute:
+    spec = getattr(cls, '__argparse__', None)
+    if spec is not None:
+        return to_spec(spec)
+    # we can generate sensible specs for some types on the fly:
+    spec = gen_type_spec(cls)
+    if spec is not None:
+        return to_spec(spec)
+    return None
+
+
+def register_spec(cls, spec):
+    """
+    TBD
+    """
+    spec = to_spec(spec)
+    _SPEC_REGISTRY[cls] = spec
+    return spec
+
+
+def to_spec(spec):
+    if isinstance(spec, ArgParseSpec):
+        return spec
+    if isinstance(spec, type):
+        attr_dict = {k: v for k, v in spec.__dict__.items() if not k.startswith('_')}
+    else:
+        attr_dict = dict(spec)
+    return ArgParseSpec(**attr_dict)
+
+
+def gen_type_spec(cls, **kwargs):
+    """
+    Auto-generate spec for some supported types, e.g. Enums.
+    """
+    if isinstance(cls, type) and issubclass(cls, Enum):
+        return gen_enum_spec(cls, **kwargs)
+    return None
+
+
+################################################################################
+# enum support
+
+class _EnumValueType:
+
+    def __init__(self, enum_cls):
+        self.enum_cls = enum_cls
+
+    def __call__(self, key):
+        # converts a value from cli to an enum member
+        try:
+            return self.enum_cls[key]
+        except KeyError:
+            raise ValueError(key) from None
+
+    @property
+    def __name__(self):
+        # defiend for nicer error messages
+        return self.enum_cls.__name__
+
+    @property
+    def __metavar__(self):
+        return self.__name__
+
+
+def gen_enum_spec(cls, **kwargs):
+    enum_value_type = _EnumValueType(cls)
+    kw = dict(
+        from_string=enum_value_type,
+        choices=list(cls),
+        #metavar=cls.__name__,
+    )
+    kw.update(kwargs)
+    return ArgParseSpec(**kw)
+
+
+################################################################################

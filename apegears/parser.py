@@ -1,0 +1,344 @@
+"""
+TBD
+"""
+
+# TBD: type=bool -> to call boolify
+
+import argparse as _ap
+from collections import OrderedDict
+
+from .misc import _ExtendAction, _SetItemAction, _KeyValueType, _StrictDefaultActionWrapper
+from .spec import find_spec as _find_spec
+
+
+################################################################################
+# Our ArgumentParser class
+
+class ArgumentParser(_ap.ArgumentParser):
+    """
+    TBD
+    """
+
+    _REQUIRED_IS_NONEMPTY_ACTIONS = (_ExtendAction, _SetItemAction)
+
+    ################################################################################
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # register our actions
+        self.register('action', 'extend', _ExtendAction)
+        self.register('action', 'setitem', _SetItemAction)
+
+    ################################################################################
+    # add_argument()
+
+    def add_argument(self, *args, **kwargs):
+
+        # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
+        strict_default = kwargs.pop('strict_default', False)
+        if strict_default:
+            action = self._get_strict_default_action(kwargs.get('action'))
+            if action is not None:
+                kwargs['action'] = action
+
+        # metavar defaulting
+        metavar = kwargs.get('metavar')
+        type = kwargs.get('type')
+        if metavar is None and type is not None:
+            type_metavar = getattr(type, '__metavar__', None)
+            if type_metavar is not None:
+                kwargs['metavar'] = type_metavar
+
+        # call super:
+        action = super().add_argument(*args, **kwargs)
+        return action
+
+    ################################################################################
+    # add_xxx() convenience methods
+
+    def add_positional(self, name=None, **kwargs):
+        """
+        TBD
+        TBD: does not take action(=store), required, ...
+        """
+
+        names = [name] if name else []
+        names, kwargs = self._use_spec(*names, is_positional=True, **kwargs)
+
+        if names and names[0] and names[0][0] in self.prefix_chars:
+            raise ValueError('name of positional must not start with %r' % self.prefix_chars)
+        for k in ['action', 'required']:
+            if k in kwargs:
+                raise ValueError('%s= does not apply to positionals' % k)
+
+        nargs = kwargs.pop('nargs', None)
+        if 'default' in kwargs:
+            # a positional with a default value
+            if nargs is None:
+                nargs = '?'
+            if nargs != '?':
+                raise ValueError(
+                    'nargs=%s does not apply to a positional with a default value' % nargs)
+
+        return self.add_argument(*names, action=None, nargs=nargs, **kwargs)
+
+    def add_optional(self, *flags, **kwargs):
+        """
+        TBD
+        """
+        flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
+        if not flags:
+            raise ValueError('name not supplied for optional')
+        flags = [self._fix_flag(flag) for flag in flags]
+        return self.add_argument(*flags, **kwargs)
+
+    def add_flag(self, *flags, **kwargs):
+        """
+        TBD
+        TBD implies an optional
+        TBD: does not take action(=store_true), nargs, ...
+        """
+
+        flags = [self._fix_flag(flag) for flag in flags]
+
+        for k in ['action', 'nargs', 'required', 'const', 'default', 'type', 'choices']:
+            if k in kwargs:
+                raise ValueError('%s= does not apply to flags' % k)
+
+        return self.add_argument(*flags, action='store_true', **kwargs)
+
+    def add_list(self, *flags, **kwargs):
+        """
+        TBD
+
+        Not passing the option and passing it with no values are equivalent,
+        and result with an empty list.
+
+        required=True means a **non-empty** list is required.
+
+        TBD implies an optional
+        TBD: does not take action(=TBD)
+        """
+        flags, kwargs = self._process_collection_optional(list, 'list', *flags, **kwargs)
+        flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
+
+        # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
+        kwargs.setdefault('strict_default', True)
+
+        return self.add_argument(*flags, action='extend', **kwargs)
+
+    def add_dict(self, *flags, key_type=None, key_metavar=None, **kwargs):
+        """
+        TBD
+
+        Not passing the option and passing it with no values are equivalent,
+        and result with an empty dict.
+
+        required=True means a **non-empty** dict is required.
+
+        TBD implies an optional
+        TBD: does not take action(=setitem)
+        TBD: use ordereddict?
+        TBD: type= applies to the value
+        """
+
+        # note: choices is not supported
+        if 'choices' in kwargs:
+            raise ValueError('choices= is not supported for dict')
+
+        explicit_metavar = kwargs.get('metavar')
+
+        flags, kwargs = self._process_collection_optional(OrderedDict, 'dict', *flags, **kwargs)
+        flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
+
+        # note: choices is not supported. if it was set from spec, remote it
+        kwargs.pop('choices', None)
+
+        # we use our own type, which stores key_type and value_type:
+        type = kwargs.pop('type', None)
+        type = _KeyValueType(
+            key_type, type,
+            key_metavar=key_metavar, value_metavar=kwargs.get('metavar'),
+        )
+
+        # if metavar was passed explicitly, we leave it as is.
+        # Else, we overwrite it (even if it was set from the spec), because the spec refers to
+        # value, not key=value.
+        if explicit_metavar is None:
+            kwargs['metavar'] = type.get_metavar()
+
+        # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
+        kwargs.setdefault('strict_default', True)
+
+        return self.add_argument(*flags, type=type, action='setitem', **kwargs)
+
+    def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
+
+        for k in ['action']:
+            if k in kwargs:
+                raise ValueError('%s= does not apply to %ss' % (k, coll_cls_name))
+
+        # nargs defaults to '*'
+        nargs = kwargs.pop('nargs', None)
+        if nargs is None:
+            nargs = '*'
+        if nargs == '?':
+            raise ValueError('nargs=%s does not apply to %ss' % (nargs, coll_cls_name))
+
+        # default to an empty collection:
+        default = kwargs.pop('default', None)
+        if default is None:
+            default = coll_cls()
+
+        kwargs.update(
+            default=default,
+            nargs=nargs,
+        )
+
+        flags = [self._fix_flag(flag) for flag in flags]
+
+        return flags, kwargs
+
+    ################################################################################
+    # argparse spec
+
+    def _use_spec(self, *args, is_positional=None, **kwargs):
+        if is_positional is None:
+            is_positional = self._is_positional(*args)
+        type = kwargs.get('type', None)
+        if type is not None:
+            spec = self._spec_from_type(type)
+            if spec is not None:
+                args, kwargs = self._apply_spec(spec, *args, is_positional=is_positional, **kwargs)
+        return args, kwargs
+
+    def _apply_spec(self, spec, *args, is_positional, **kwargs):
+
+        # default to names from spec:
+        if not args:
+            names = spec.names
+            if names and names != spec.EMPTY:
+                args = tuple(names)
+                if is_positional:
+                    # a positional uses the first name
+                    args = args[:1]
+                else:
+                    # add optional prefix
+                    args = tuple([self._fix_flag(arg) for arg in args])
+
+        # handle rest of the fields:
+
+        def _setdefault(attr):
+            v = getattr(spec, attr)
+            if v != spec.EMPTY:
+                kwargs.setdefault(attr, v)
+
+        for attr in ['choices', 'help', 'metavar']:
+            _setdefault(attr)
+
+        if not kwargs.get('required', False):
+            _setdefault('default')
+
+        kwargs['type'] = spec.from_string
+
+        return args, kwargs
+
+    def _spec_from_type(self, type):
+        if type is None:
+            return None
+        spec = _find_spec(type)
+        if spec is not None:
+            return spec
+        return None  # no spec, do standard type handling
+
+    ################################################################################
+    # enforcement of required=True
+
+    def parse_known_args(self, *args, **kwargs):
+        namespace, args = super().parse_known_args(*args, **kwargs)
+        self._enforce_required(namespace)
+        return namespace, args
+
+    def _enforce_required(self, namespace):
+        empty_required_actions = [
+            _ap._get_action_name(action)
+            for action in self._actions
+            if getattr(action, 'required', False)
+            and isinstance(action, self._REQUIRED_IS_NONEMPTY_ACTIONS)
+            and not getattr(namespace, action.dest, None)
+        ]
+        if empty_required_actions:
+            self.error(
+                _ap._('the following arguments are required: %s') %
+                ', '.join(empty_required_actions)
+            )
+
+    ################################################################################
+    # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
+
+    _STRICT_DEFAULT_ACTIONS = {
+        _ap._AppendAction: [],
+        _ExtendAction: [],
+        _SetItemAction: OrderedDict(),
+    }
+
+    def _get_strict_default_action(self, action):
+        action_cls = self._registry_get('action', action, action)
+        if not isinstance(action_cls, type):
+            return None
+        for sd_action_cls, empty_value in self._STRICT_DEFAULT_ACTIONS.items():
+            if issubclass(action_cls, sd_action_cls):
+                return lambda *a, **kw: \
+                    _StrictDefaultActionWrapper(action_cls(*a, **kw), empty_value, *a, **kw)
+        return None
+
+    ################################################################################
+    # misc
+
+    def positional_names(self):
+        return self._argument_names(self._positionals, 'name')
+
+    def positional_dests(self):
+        return self._argument_names(self._positionals, 'dest')
+
+    def optional_names(self):
+        return self._argument_names(self._optionals, 'name')
+
+    def optional_dests(self):
+        return self._argument_names(self._optionals, 'dest')
+
+    def _argument_names(self, arggroup, field):
+        return [getattr(action, field) for action in arggroup._group_actions]
+
+    ################################################################################
+    # privates
+
+    def _fix_flag(self, flag):
+        """
+        TBD
+        """
+        if (not flag) or flag[0] in self.prefix_chars:
+            return flag
+        c = self.prefix_chars[0]
+        if len(flag) == 1:
+            return c + flag
+        else:
+            return (c * 2) + flag
+
+    def _is_positional(self, *args):
+        # NOTE: based on code from base class
+
+        # if no positional args are supplied or only one is supplied and
+        # it doesn't look like an option string, parse a positional
+        # argument
+        if not args:
+            return True
+        if len(args) == 1:
+            a, = args
+            if not a or a[0] not in self.prefix_chars:
+                return True
+        return False
+
+
+################################################################################
