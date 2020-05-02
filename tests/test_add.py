@@ -93,6 +93,12 @@ class AddArgumentTest(unittest.TestCase):
         for k in ['action', 'nargs', 'required', 'const', 'default', 'type', 'choices']:
             self.assertRaises(ValueError, P, **{k: None})
 
+        # test negative flag
+        self.assertEqual(P('xx', cli_args='').xx, False)
+        self.assertEqual(P('xx', cli_args='--no-xx').xx, False)
+        self.assertRaises(SystemExit, P, 'xx', include_negative=False, cli_args='--no-xx')
+        self.assertRaises(AttributeError, lambda: P('xx', cli_args='--no-xx').no_xx)
+
     def test_list(self):
         def P(*a, **kw):
             return self._parse('list', *a, **kw)

@@ -33,10 +33,9 @@ class ArgumentParser(_ap.ArgumentParser):
     ################################################################################
     # add_argument()
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args, strict_default=False, **kwargs):
 
         # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
-        strict_default = kwargs.pop('strict_default', False)
         if strict_default:
             action = self._get_strict_default_action(kwargs.get('action'))
             if action is not None:
@@ -81,7 +80,12 @@ class ArgumentParser(_ap.ArgumentParser):
                 raise ValueError(
                     'nargs=%s does not apply to a positional with a default value' % nargs)
 
-        return self.add_argument(*names, action=None, nargs=nargs, **kwargs)
+        return self.add_argument(
+            *names,
+            action=None,
+            nargs=nargs,
+            **kwargs
+        )
 
     def add_optional(self, *flags, **kwargs):
         """
@@ -93,9 +97,10 @@ class ArgumentParser(_ap.ArgumentParser):
         flags = [self._fix_flag(flag) for flag in flags]
         return self.add_argument(*flags, **kwargs)
 
-    def add_flag(self, *flags, **kwargs):
+    def add_flag(self, *flags, include_negative=True, **kwargs):
         """
         TBD
+        TBD include_negative
         TBD implies an optional
         TBD: does not take action(=store_true), nargs, ...
         """
@@ -106,9 +111,23 @@ class ArgumentParser(_ap.ArgumentParser):
             if k in kwargs:
                 raise ValueError('%s= does not apply to flags' % k)
 
-        return self.add_argument(*flags, action='store_true', **kwargs)
+        action = self.add_argument(*flags, action='store_true', **kwargs)
 
-    def add_list(self, *flags, **kwargs):
+        if include_negative:
+            negative_flags = self._get_negative_flags(flags)
+            kwargs.pop('dest', None)
+            kwargs.pop('help', None)
+            self.add_argument(
+                *negative_flags,
+                action='store_false',
+                dest=action.dest,
+                help=_ap.SUPPRESS,
+                **kwargs
+            )
+
+        return action
+
+    def add_list(self, *flags, strict_default=True, **kwargs):
         """
         TBD
 
@@ -122,13 +141,14 @@ class ArgumentParser(_ap.ArgumentParser):
         """
         flags, kwargs = self._process_collection_optional(list, 'list', *flags, **kwargs)
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
+        return self.add_argument(
+            *flags,
+            action='extend',
+            strict_default=strict_default,
+            **kwargs
+        )
 
-        # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
-        kwargs.setdefault('strict_default', True)
-
-        return self.add_argument(*flags, action='extend', **kwargs)
-
-    def add_dict(self, *flags, key_type=None, key_metavar=None, **kwargs):
+    def add_dict(self, *flags, key_type=None, key_metavar=None, strict_default=True, **kwargs):
         """
         TBD
 
@@ -168,37 +188,13 @@ class ArgumentParser(_ap.ArgumentParser):
         if explicit_metavar is None:
             kwargs['metavar'] = type.get_metavar()
 
-        # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
-        kwargs.setdefault('strict_default', True)
-
-        return self.add_argument(*flags, type=type, action='setitem', **kwargs)
-
-    def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
-
-        for k in ['action']:
-            if k in kwargs:
-                raise ValueError('%s= does not apply to %ss' % (k, coll_cls_name))
-
-        # nargs defaults to '*'
-        nargs = kwargs.pop('nargs', None)
-        if nargs is None:
-            nargs = '*'
-        if nargs == '?':
-            raise ValueError('nargs=%s does not apply to %ss' % (nargs, coll_cls_name))
-
-        # default to an empty collection:
-        default = kwargs.pop('default', None)
-        if default is None:
-            default = coll_cls()
-
-        kwargs.update(
-            default=default,
-            nargs=nargs,
+        return self.add_argument(
+            *flags,
+            type=type,
+            action='setitem',
+            strict_default=strict_default,
+            **kwargs
         )
-
-        flags = [self._fix_flag(flag) for flag in flags]
-
-        return flags, kwargs
 
     ################################################################################
     # argparse spec
@@ -314,6 +310,33 @@ class ArgumentParser(_ap.ArgumentParser):
     ################################################################################
     # privates
 
+    def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
+
+        for k in ['action']:
+            if k in kwargs:
+                raise ValueError('%s= does not apply to %ss' % (k, coll_cls_name))
+
+        # nargs defaults to '*'
+        nargs = kwargs.pop('nargs', None)
+        if nargs is None:
+            nargs = '*'
+        if nargs == '?':
+            raise ValueError('nargs=%s does not apply to %ss' % (nargs, coll_cls_name))
+
+        # default to an empty collection:
+        default = kwargs.pop('default', None)
+        if default is None:
+            default = coll_cls()
+
+        kwargs.update(
+            default=default,
+            nargs=nargs,
+        )
+
+        flags = [self._fix_flag(flag) for flag in flags]
+
+        return flags, kwargs
+
     def _fix_flag(self, flag):
         """
         TBD
@@ -325,6 +348,25 @@ class ArgumentParser(_ap.ArgumentParser):
             return c + flag
         else:
             return (c * 2) + flag
+
+    def _get_negative_flags(self, flags):
+        long_flags = [
+            f for f in flags
+            if len(f) >= 2
+            and f[0] in self.prefix_chars and f[1] in self.prefix_chars
+        ]
+        if long_flags:
+            # e.g. --foo   -->   --no-foo
+            f = long_flags[0]
+            prefix = f[:2]
+            suffix = f[2:]
+        else:
+            # e.g. -f   -->   --no-f
+            f = flags[0]
+            assert f[0] in self.prefix_chars, flags
+            prefix = f[0] * 2
+            suffix = f[1:]
+        return ['%sno-%s' % (prefix, suffix)]
 
     def _is_positional(self, *args):
         # NOTE: based on code from base class
