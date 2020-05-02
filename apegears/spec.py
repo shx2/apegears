@@ -1,5 +1,5 @@
 """
-TBD
+Argument-type specs.
 """
 
 from enum import Enum
@@ -14,8 +14,11 @@ _SPEC_REGISTRY = {}
 
 class ArgParseSpec:
     """
-    TBD
-    TBD mention default, from_string, names
+    A class defining *type* default behavior of argument-parser args ("action fields")
+    for argument *types*.
+
+    ``from_string`` corresponds to the argparse ``type`` field. It is a callable which defines
+    how to convert a string value (read from CLI) to an object of that type.
     """
 
     EMPTY = object()
@@ -54,7 +57,8 @@ def find_spec(cls):
 
 def register_spec(cls, spec):
     """
-    TBD
+    Register an arg-type spec.  Once registered, ``cls`` can be used as the ``type`` argument
+    of the ``parser.add_xxx`` methods, e.g. ``parser.add_optional(..., type=cls, ...)``.
     """
     spec = to_spec(spec)
     _SPEC_REGISTRY[cls] = spec

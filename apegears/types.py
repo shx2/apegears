@@ -1,5 +1,14 @@
 """
 Integrating some standard python types with the ArgumentParser.
+
+Included here:
+
+- date (type=datetime.date or type='date')
+- datetime (type=datetime.datetime or type='datetime')
+- path (type=pathlib.Path or type='path')
+- regular expressions (type='regex')
+- IP address (type='ipaddress')
+
 """
 
 import datetime

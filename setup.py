@@ -20,7 +20,7 @@ setup(
     name='apegears',
     version=version_string,
 
-    description='TBD',
+    description='An improved ArgumentParser, fully compatible with argparse.',
     long_description=long_description,
     url='https://github.com/shx2/apegears',
     author='shx2',

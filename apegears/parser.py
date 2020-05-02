@@ -1,8 +1,6 @@
 """
-TBD
+Definition of the ApeGears ArgumentParser class.
 """
-
-# TBD: type=bool -> to call boolify
 
 import argparse as _ap
 from collections import OrderedDict
@@ -16,7 +14,13 @@ from .spec import find_spec as _find_spec
 
 class ArgumentParser(_ap.ArgumentParser):
     """
-    TBD
+    TBD -- do this after the README.rst
+
+    This class TBD:
+
+    - TBD
+    - TBD
+
     """
 
     _REQUIRED_IS_NONEMPTY_ACTIONS = (_ExtendAction, _SetItemAction)
@@ -58,8 +62,11 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def add_positional(self, name=None, **kwargs):
         """
-        TBD
-        TBD: does not take action(=store), required, ...
+        Add a positional argument to the parser.  This calls ``add_argument`` with appropriate
+        values.
+
+        :param kwargs:
+            Supports all kwargs supported by ``add_argument``, except for action and required.
         """
 
         names = [name] if name else []
@@ -89,7 +96,15 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def add_optional(self, *flags, **kwargs):
         """
-        TBD
+        Add an *optional* parameter.  This calls ``add_argument`` with appropriate values.
+
+        :param flags:
+            supports flags with prefix ("-", "--") omitted. Prefix will be added automaticallly.
+        :param kwargs:
+            supports all kwargs supported by ``add_argument``.
+
+        :note: "optional" is ``argparse``'s way of saying "non-positional".  An "optional" argument
+            is non-positional, but is not necessarilly *optional*, i.e. you can set required=True.
         """
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
         if not flags:
@@ -99,10 +114,14 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def add_flag(self, *flags, include_negative=True, **kwargs):
         """
-        TBD
-        TBD include_negative
-        TBD implies an optional
-        TBD: does not take action(=store_true), nargs, ...
+        Add an *optional* boolean flag.  This calls ``add_argument`` with appropriate values.
+
+        :param flags:
+            same as ``add_optional``
+        :param kwargs:
+            supported kwargs: dest, help, metavar.
+        :param include_negative:
+            if True, will also add an hidden negative flag with prefix "--no-"
         """
 
         flags = [self._fix_flag(flag) for flag in flags]
@@ -129,15 +148,18 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def add_list(self, *flags, strict_default=True, **kwargs):
         """
-        TBD
+        Add an *optional* list argument.  This calls ``add_argument`` with appropriate values.
 
-        Not passing the option and passing it with no values are equivalent,
-        and result with an empty list.
+        :param flags:
+            same as ``add_optional``
+        :param kwargs:
+            Supports all kwargs supported by ``add_argument``, except for action.
+            nargs is typically not required.
 
-        required=True means a **non-empty** list is required.
+        :note: The default default value is an empty list.
+        :note: required=True means a **non-empty** list is required.
 
-        TBD implies an optional
-        TBD: does not take action(=TBD)
+        TBD: strict_default
         """
         flags, kwargs = self._process_collection_optional(list, 'list', *flags, **kwargs)
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
@@ -150,17 +172,24 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def add_dict(self, *flags, key_type=None, key_metavar=None, strict_default=True, **kwargs):
         """
-        TBD
+        Add an *optional* dict argument, where each item is of the form "KEY=VALUE".
+        This calls ``add_argument`` with appropriate values.
 
-        Not passing the option and passing it with no values are equivalent,
-        and result with an empty dict.
+        :param flags:
+            same as ``add_optional``
+        :param kwargs:
+            Supports all kwargs supported by ``add_argument``, except for action and choices.
+            type refer to the *VALUE part* of the KEY=VALUE pair.
+            metavar refers to the KEY=VALUE pair, not just the value.
+            nargs is typically not required.
+        :param key_type, key_metavar:
+            Same as type and metavar, but refers to the *KEY part* of the key=value pair.
 
-        required=True means a **non-empty** dict is required.
+        :note: the resulting dict is an OrderedDict, reflecting cli order.
+        :note: The default default value is an empty ``OrderedDict``.
+        :note: required=True means a **non-empty** dict is required.
 
-        TBD implies an optional
-        TBD: does not take action(=setitem)
-        TBD: use ordereddict?
-        TBD: type= applies to the value
+        TBD: strict_default
         """
 
         # note: choices is not supported
@@ -172,7 +201,7 @@ class ArgumentParser(_ap.ArgumentParser):
         flags, kwargs = self._process_collection_optional(OrderedDict, 'dict', *flags, **kwargs)
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
 
-        # note: choices is not supported. if it was set from spec, remote it
+        # note: choices is not supported. if it was set from spec, remove it
         kwargs.pop('choices', None)
 
         # we use our own type, which stores key_type and value_type:
@@ -339,7 +368,8 @@ class ArgumentParser(_ap.ArgumentParser):
 
     def _fix_flag(self, flag):
         """
-        TBD
+        For optionals, add an appropriate prefix if needed.
+        E.g. 'x' --> '-x', 'yy' --> '--yy'.
         """
         if (not flag) or flag[0] in self.prefix_chars:
             return flag

@@ -1,5 +1,5 @@
 """
-TBD
+Private definitions of actions, types, etc. used in this pacakge.
 """
 
 import argparse as _ap
