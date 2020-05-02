@@ -112,6 +112,7 @@ class _EnumValueType:
 def gen_enum_spec(cls, **kwargs):
     enum_value_type = _EnumValueType(cls)
     kw = dict(
+        names=[enum_value_type.__name__.lower()],
         from_string=enum_value_type,
         choices=list(cls),
     )

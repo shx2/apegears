@@ -122,7 +122,6 @@ class TypeIntegrationTest(unittest.TestCase):
         # default is always the empty collection, regardless of spec
         for T in [TypeMinimal, Type1, Type2]:
             self.assertEqual(P('x', type=T, cli_args='').x, [])
-            self.assertEqual(P('x', type=T, cli_args='-x').x, [])
 
         res = P('x', type=TypeMinimal, cli_args='-x aa').x
         self.assertEqual(len(res), 1)
@@ -139,7 +138,6 @@ class TypeIntegrationTest(unittest.TestCase):
         # default is always the empty collection, regardless of spec
         for T in [TypeMinimal, Type1, Type2]:
             self.assertEqual(P('x', type=T, cli_args='').x, {})
-            self.assertEqual(P('x', type=T, cli_args='-x').x, {})
 
         res = P('x', type=TypeMinimal, cli_args='-x aa=bb').x
         self.assertEqual(len(res), 1)

@@ -345,10 +345,10 @@ class ArgumentParser(_ap.ArgumentParser):
             if k in kwargs:
                 raise ValueError('%s= does not apply to %ss' % (k, coll_cls_name))
 
-        # nargs defaults to '*'
+        # nargs defaults to '+' (not '*', providing the flag with no value is just bad practice)
         nargs = kwargs.pop('nargs', None)
         if nargs is None:
-            nargs = '*'
+            nargs = '+'
         if nargs == '?':
             raise ValueError('nargs=%s does not apply to %ss' % (nargs, coll_cls_name))
 

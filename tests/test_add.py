@@ -110,6 +110,8 @@ class AddArgumentTest(unittest.TestCase):
         self.assertEqual(P('x', type=int, cli_args='-x -222 666').x, [-222, 666])
         self.assertEqual(P('x', type=int, cli_args='-x -2 4 -x 6 8 10').x, [-2, 4, 6, 8, 10])
 
+        # raise if flag appears with no values
+        self.assertRaises(SystemExit, P, 'x', cli_args='-x')
         # raise if action is passed
         self.assertRaises(ValueError, P, 'arg1', action='store')
         # raise if nargs='?' is passed

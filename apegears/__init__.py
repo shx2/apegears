@@ -2,6 +2,9 @@
 TBD
 """
 
+# for argparse compatibility, make all public names from argparse importable from here
+from argparse import *
+
 from .parser import ArgumentParser
 from .spec import register_spec
 
