@@ -1,0 +1,17 @@
+
+0.1.0
+-----
+* Adder methods: add_positional, add_optional, add_flag, add_list.
+* Dict arguments
+* Custom argument-types using "specs"
+* Support for some standard python types
+* Support for enum arguments
+* Workaround append-with-nonempty-default bug
+
+Future/Planned
+----------------
+* Integration with func_argparse
+* Integration with argcomplete
+* Integration with autocommand
+* Integration with click
+* Integration with fire
