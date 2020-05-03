@@ -1,5 +1,11 @@
 """
-TBD
+An improved ArgumentParser, fully compatible with the standard argparse.ArgumentParser.
+
+You can simply start by replacing your import lines::
+
+    import argparse            -->  import apegears
+    from argparse import ...   -->  from apegears import ...
+
 """
 
 # for argparse compatibility, make all public names from argparse importable from here

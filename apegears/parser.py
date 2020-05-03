@@ -14,12 +14,15 @@ from .spec import find_spec as _find_spec
 
 class ArgumentParser(_ap.ArgumentParser):
     """
-    TBD -- do this after the README.rst
+    This class is fully compatible with the standard argparse.ArgumentParser, and provides
+    some features:
 
-    This class TBD:
-
-    - TBD
-    - TBD
+    - Adder methods: add_positional, add_optional, add_flag, add_list.
+    - Dict arguments
+    - Custom argument-types using "specs"
+    - Support for some standard python types
+    - Support for enum arguments
+    - Workaround append-with-nonempty-default bug
 
     """
 
@@ -38,6 +41,9 @@ class ArgumentParser(_ap.ArgumentParser):
     # add_argument()
 
     def add_argument(self, *args, strict_default=False, **kwargs):
+        """
+        :param strict_default: whether to enable workaround issue16399
+        """
 
         # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
         if strict_default:
@@ -155,11 +161,10 @@ class ArgumentParser(_ap.ArgumentParser):
         :param kwargs:
             Supports all kwargs supported by ``add_argument``, except for action.
             nargs is typically not required.
+        :param strict_default: whether to enable workaround issue16399
 
         :note: The default default value is an empty list.
         :note: required=True means a **non-empty** list is required.
-
-        TBD: strict_default
         """
         flags, kwargs = self._process_collection_optional(list, 'list', *flags, **kwargs)
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
@@ -184,12 +189,11 @@ class ArgumentParser(_ap.ArgumentParser):
             nargs is typically not required.
         :param key_type, key_metavar:
             Same as type and metavar, but refers to the *KEY part* of the key=value pair.
+        :param strict_default: whether to enable workaround issue16399
 
         :note: the resulting dict is an OrderedDict, reflecting cli order.
         :note: The default default value is an empty ``OrderedDict``.
         :note: required=True means a **non-empty** dict is required.
-
-        TBD: strict_default
         """
 
         # note: choices is not supported

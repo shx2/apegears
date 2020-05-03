@@ -28,20 +28,6 @@ Furthermore, it seems to be missing some useful options, such as support for ``d
 Also, using arguments of custom types (using the ``type`` parameter) doesn't work as smoothly as you'd hope.
 
 
-Why is it called "ApeGears"?
---------------------------------
-
-::
-
-    import random
-    argparse = list('argparse')
-    apegears = list('apegears')
-    while argparse != apegears:
-        random.shuffle(argparse)
-    print('Got it?')
-
-Probably not...
-
 
 
 Feaures
@@ -55,12 +41,12 @@ Following is an overview of the main features.  See below for more details on ea
 
 - Dict arguments, using ``add_dict`` method.
 - Defining custom argument-types is simpler and more powerful, using "specs".
-- Argument-types for some standard python types are predefined and ready-to-use.
+- Builtin support for some standard python types.
 
-  - E.g. ``date``, ``datetime``, ``Path``, regular expression, IP address.
+  - E.g. ``date``, ``datetime``, ``Path``, IP address, regular expression.
 
-- Builtin support for enum arguments. E.g. ``parser.add_optional(type=MyEnum)``.
-- Easy-to-use workaround append-with-nonempty-default issue. TBD add link.
+- Builtin support for enum arguments.
+- Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
 - (PLANNED) Integration with other ``ArgumentParser``-related tools.
 
 
@@ -72,10 +58,10 @@ It has many kwargs, and not all combinations make sense.
 
 Instead, in most cases, you can use the more precise and convenient adder methods:
 
-- ``add_positional`` -- for defining positional arguments
-- ``add_optional`` -- for defining optional (i.e. non-positional) arguments
-- ``add_flag`` -- for defining (optional) flags ("switches")
-- ``add_list`` -- for defining (optional) list arguments
+- ``add_positional`` -- for defining positional arguments.
+- ``add_optional`` -- for defining optional (i.e. non-positional) arguments.
+- ``add_flag`` -- for defining (optional) flags ("switches").
+- ``add_list`` -- for defining (optional) list arguments.
 
   - Multiple values can be passed in a single arg, or multiple.  The following are equivalent,
     and result with ``{'chars': ['a', 'b', 'c', 'd']}``::
@@ -89,31 +75,101 @@ You can still use the ``add_argument`` method for "advanced" argument definition
 
 Dict arguments
 ----------------
-TBD
+
+Use ``add_dict`` for defining dict optional arguments.  E.g.::
+
+    parser.add_dict('--overrides')
+    parser.parse_args('--overrides log_level=debug logfile=out.log'.split()).overrides
+    => OrderedDict([('log_level', 'debug'), ('logfile', 'out.log')])
+
+Similar to list arguments, multiple key-value pairs can be passed in a single arg, or multiple.
 
 
 Custom argument types
 -------------------------
-TBD
+
+``argparse`` supports adding argument types by passing ``type=callable``, where ``callable``
+converts the CLI string value to whatever you want (e.g. ``int`` converts the string to an integer).
+
+This is not powerful enough, because often, when defining how a new argument type behaves, you'd want to include more
+than just how to convert a CLI string.
+
+ApeGears makes use of *Argument Type Specs*, which supports defining defaults for several fields:
+
+- names
+- default
+- choices
+- help
+- metavar
+
+Each of these can be explicitly overridden when calling the adder function.
+
+Suppose you have a type ``T`` which you want to use with the parser, so you define
+a spec for it, ``Tspec``.
+
+For supporting usage like ``parser.add_xxx(..., type=T, ...)``, you either:
+
+- register the spec: ``register_spec(T, Tspec)``
+- define a class attribute named ``__argparse__``. E.g.: ``T.__argparse__ = Tspec``
+
+
+Alternatively, this also works: ``parser.add_xxx(..., type=Tspec, ...)``
 
 
 Argument types for standard python types
 ------------------------------------------
-TBD
+
+Argument type specs are predefined for some standard python types.
+E.g., date, datetime, path, IP address, regular expression.
+
+Can be used like this::
+
+    parser.add_optional(..., type='date', ...)  # also works: type=datetime.date
+    parser.parse_args('--date 2020-03-04'.split()).date
+    => datetime.date(2020, 3, 4)
 
 
 Enum arguments
 ----------------
-TBD
+
+Enum types are also supported as argument types::
+
+    class Direction(Enum):
+        UP = 1
+        DOWN = 2
+        LEFT = 3
+        RIGHT = 4
+
+    parser.add_optional(type=Direction)
+    parser.parse_args('--direction LEFT'.split()).direction
+    => <Direction.LEFT: 3>
 
 
 The append-with-nonempty-default issue
 ------------------------------------------
-TBD
+
+You might have encountered a `bug <https://bugs.python.org/issue16399>`_ when using list arguments
+in the standard ``ArgumentParser``::
+
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('list', action='append', default=['D'])
+    parser.parse_args('X'.split()).list
+    => ['D', 'X']  # expected: ['X']
+
+Basically, ``default``, instead of being used as a *default* value, is used as an *initial* value.
+
+There is no easy-to-use workaround in the argparser level, but ApeGears provides one.
+
+The ``add_list`` and ``add_dict`` methods include a workaround this issue.  It is enabled by default.
+
+If you use the ``add_argument`` method directly, the workaround is disabled (for being compatible with ``argparse``),
+but you can enable it by passing ``strict_default=True``.
 
 
 Integration with other ``ArgumentParser``-related tools
 ------------------------------------------------------------
+
 To come...
 
 
@@ -138,6 +194,17 @@ by replacing your import lines::
     import argparse            -->  import apegears
     from argparse import ...   -->  from apegears import ...
 
-which unleashes the apes.
+... to unleash the apes.
 
+
+What does the Name Mean?
+============================
+Nothing. ::
+
+    argparse = list('argparse')
+    apegears = list('apegears')
+    while argparse != apegears:
+        random.shuffle(argparse)
+    print('Got it?')
+    print('Probably not...')
 
