@@ -41,6 +41,5 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
     ],
-    keywords='CLI argparse ArgumentParser optparse',
-
+    keywords='CLI argparse ArgumentParser optparse func_argparse',
 )

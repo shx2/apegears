@@ -1,0 +1,2 @@
+# for integration with various argument-parser generators
+func_argparse
