@@ -47,7 +47,10 @@ Following is an overview of the main features.  See below for more details on ea
 
 - Builtin support for enum arguments.
 - Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
-- (PLANNED) Integration with other ``ArgumentParser``-related tools.
+- Integration with other ``ArgumentParser``-related tools.
+
+  - `func_argparse <https://pypi.org/project/func-argparse/>`_
+  - more to come...
 
 
 Adder methods
@@ -168,9 +171,26 @@ but you can enable it by passing ``strict_default=True``.
 
 
 Integration with other ``ArgumentParser``-related tools
-------------------------------------------------------------
+===========================================================
 
-To come...
+
+func_argparse
+---------------
+
+`func_argparse <https://pypi.org/project/func-argparse/>`_ is used for
+"Generating a nice command line interface for a list of functions or a module".
+
+ApeGears lets you use func_argparse for generating an ApeGears ``ArgumentParser``, instead of ``argparse``'s.
+
+The main advantages of using ``apegears + func_argparse`` over using ``func_argparse`` alone:
+
+- Dict options
+- Custom argument types, and argument types for standard python types
+
+To use it, simply replace your import lines::
+
+    import func_argparse            -->    import apegears.func_argparse
+    from func_argparse import ...   -->    from apegears.func_argparse import ...
 
 
 
@@ -207,4 +227,3 @@ Nothing. ::
         random.shuffle(argparse)
     print('Got it?')
     print('Probably not...')
-
