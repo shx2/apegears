@@ -49,8 +49,8 @@ Following is an overview of the main features.  See below for more details on ea
 - Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
 - Integration with other ``ArgumentParser``-related tools.
 
+  - `argcomplete <https://pypi.org/project/argcomplete/>`_
   - `func_argparse <https://pypi.org/project/func-argparse/>`_
-  - more to come...
 
 
 Adder methods
@@ -172,6 +172,23 @@ but you can enable it by passing ``strict_default=True``.
 
 Integration with other ``ArgumentParser``-related tools
 ===========================================================
+
+argcomplete
+---------------
+
+`argcomplete <https://pypi.org/project/argcomplete/>`_ allows
+"command line tab completion of arguments for your Python script".
+
+For argcomplete users, there are a few (minor) advantages to using ApeGears ``ArgumentParser``, over ``argparse``'s:
+
+- No need to call ``argcomplete.autocomplete(parser)``, it is called automatically for you
+- Better completion of enum types
+- Avoids the awkward way of setting a custom completer
+
+  - use like: ``parser.add_argument(..., completer=MyCompleter)``
+  - instead of: ``parser.add_argument(...).completer = MyCompleter``
+
+- If you define custom argument types, you can also define a completer as part of their spec
 
 
 func_argparse

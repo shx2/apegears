@@ -1,4 +1,10 @@
 
+0.2.0
+-----
+* Integration with ``argcomplete``
+* Integration with ``func_argparse``
+
+
 0.1.0
 -----
 * Adder methods: add_positional, add_optional, add_flag, add_list.
@@ -10,8 +16,4 @@
 
 Future/Planned
 ----------------
-* Integration with func_argparse
-* Integration with argcomplete
 * Integration with autocommand
-* Integration with click
-* Integration with fire
