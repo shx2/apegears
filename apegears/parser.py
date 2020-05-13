@@ -5,6 +5,11 @@ Definition of the ApeGears ArgumentParser class.
 import argparse as _ap
 from collections import OrderedDict
 
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None  # argcomplete not installed
+
 from .misc import _ExtendAction, _SetItemAction, _KeyValueType, _StrictDefaultActionWrapper
 from .spec import find_spec as _find_spec
 
@@ -38,11 +43,36 @@ class ArgumentParser(_ap.ArgumentParser):
         self.register('action', 'setitem', _SetItemAction)
 
     ################################################################################
+    # parse_args()
+
+    def parse_known_args(self, *args, **kwargs):
+        # invoke pre-parse hook:
+        self._pre_parse(*args, **kwargs)
+
+        # call super:
+        namespace, extras = super().parse_known_args(*args, **kwargs)
+
+        # enforce required args:
+        self._enforce_required(namespace)
+
+        # invoke post-parse hook:
+        self._post_parse(namespace, extras)
+
+        return namespace, extras
+
+    def _pre_parse(self, *args, **kwargs):
+        self._pre_parse_argcomplete(*args, **kwargs)
+
+    def _post_parse(self, namespace, extras):
+        pass
+
+    ################################################################################
     # add_argument()
 
-    def add_argument(self, *args, strict_default=False, **kwargs):
+    def add_argument(self, *args, strict_default=False, completer=None, **kwargs):
         """
         :param strict_default: whether to enable workaround issue16399
+        :param completer: a custom argcomplete completer
         """
 
         # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
@@ -61,6 +91,10 @@ class ArgumentParser(_ap.ArgumentParser):
 
         # call super:
         action = super().add_argument(*args, **kwargs)
+
+        # argcomplete
+        self._set_completer(action, completer)
+
         return action
 
     ################################################################################
@@ -263,7 +297,7 @@ class ArgumentParser(_ap.ArgumentParser):
             if v != spec.EMPTY:
                 kwargs.setdefault(attr, v)
 
-        for attr in ['choices', 'help', 'metavar']:
+        for attr in ['choices', 'help', 'metavar', 'completer']:
             _setdefault(attr)
 
         if not kwargs.get('required', False):
@@ -280,28 +314,6 @@ class ArgumentParser(_ap.ArgumentParser):
         if spec is not None:
             return spec
         return None  # no spec, do standard type handling
-
-    ################################################################################
-    # enforcement of required=True
-
-    def parse_known_args(self, *args, **kwargs):
-        namespace, args = super().parse_known_args(*args, **kwargs)
-        self._enforce_required(namespace)
-        return namespace, args
-
-    def _enforce_required(self, namespace):
-        empty_required_actions = [
-            _ap._get_action_name(action)
-            for action in self._actions
-            if getattr(action, 'required', False)
-            and isinstance(action, self._REQUIRED_IS_NONEMPTY_ACTIONS)
-            and not getattr(namespace, action.dest, None)
-        ]
-        if empty_required_actions:
-            self.error(
-                _ap._('the following arguments are required: %s') %
-                ', '.join(empty_required_actions)
-            )
 
     ################################################################################
     # workaround append-with-nonempty-default issue (https://bugs.python.org/issue16399):
@@ -323,6 +335,17 @@ class ArgumentParser(_ap.ArgumentParser):
         return None
 
     ################################################################################
+    # argcomplete
+
+    def _pre_parse_argcomplete(self, *args, **kwargs):
+        if argcomplete is not None:
+            argcomplete.autocomplete(self)
+
+    def _set_completer(self, action, completer):
+        if action is not None and completer is not None:
+            action.completer = completer
+
+    ################################################################################
     # misc
 
     def positional_names(self):
@@ -342,6 +365,20 @@ class ArgumentParser(_ap.ArgumentParser):
 
     ################################################################################
     # privates
+
+    def _enforce_required(self, namespace):
+        empty_required_actions = [
+            _ap._get_action_name(action)
+            for action in self._actions
+            if getattr(action, 'required', False)
+            and isinstance(action, self._REQUIRED_IS_NONEMPTY_ACTIONS)
+            and not getattr(namespace, action.dest, None)
+        ]
+        if empty_required_actions:
+            self.error(
+                _ap._('the following arguments are required: %s') %
+                ', '.join(empty_required_actions)
+            )
 
     def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
 

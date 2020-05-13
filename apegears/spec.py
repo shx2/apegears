@@ -25,13 +25,14 @@ class ArgParseSpec:
 
     def __init__(self,
                  names=EMPTY, default=EMPTY, from_string=EMPTY,
-                 choices=EMPTY, help=EMPTY, metavar=EMPTY):
+                 choices=EMPTY, help=EMPTY, metavar=EMPTY, completer=EMPTY):
         self.names = names
         self.default = default
         self.from_string = from_string
         self.choices = choices
         self.help = help
         self.metavar = metavar
+        self.completer = completer
 
     @property
     def __argparse__(self):
@@ -106,15 +107,18 @@ class _EnumValueType:
 
     @property
     def __metavar__(self):
-        return self.__name__
+        return self.__name__.upper()
 
 
 def gen_enum_spec(cls, **kwargs):
     enum_value_type = _EnumValueType(cls)
+    strings = [e.name for e in cls]
     kw = dict(
         names=[enum_value_type.__name__.lower()],
         from_string=enum_value_type,
         choices=list(cls),
+        help='/'.join(strings),
+        completer=lambda *a, **kw: strings,
     )
     kw.update(kwargs)
     return ArgParseSpec(**kw)
