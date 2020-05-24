@@ -43,7 +43,7 @@ Following is an overview of the main features.  See below for more details on ea
 - Defining custom argument-types is simpler and more powerful, using "specs".
 - Builtin support for some standard python types.
 
-  - E.g. ``date``, ``datetime``, ``Path``, IP address, regular expression.
+  - E.g. ``range``, ``date``, ``datetime``, ``Path``, IP address, regular expression.
 
 - Builtin support for enum arguments.
 - Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
@@ -123,13 +123,20 @@ Argument types for standard python types
 ------------------------------------------
 
 Argument type specs are predefined for some standard python types.
-E.g., date, datetime, path, IP address, regular expression.
+E.g., range, date, datetime, path, IP address, regular expression.
 
 Can be used like this::
 
     parser.add_optional(..., type='date', ...)  # also works: type=datetime.date
     parser.parse_args('--date 2020-03-04'.split()).date
     => datetime.date(2020, 3, 4)
+
+Another example::
+
+    parser.add_optional('indexes', ..., type='range', ...)  # also works: type=range
+    parser.parse_args('--indexes 0:100:10'.split()).indexes
+    => range(0, 100, 10)
+
 
 
 Enum arguments

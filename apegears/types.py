@@ -20,6 +20,25 @@ from .spec import register_spec
 
 
 ################################################################################
+# range
+
+def _parse_range(s):
+    parts = [int(x) for x in s.split(':')]
+    return range(*parts)
+
+
+for _x in [range, 'range']:
+    register_spec(
+        _x,
+        dict(
+            from_string=_parse_range,
+            metavar='RANGE',
+            help='a range (START:STOP or START:STOP:STEP)'
+        ),
+    )
+
+
+################################################################################
 # datetime.date and datetime.datetime
 
 DATE_FORMAT = '%Y-%m-%d'
@@ -45,9 +64,9 @@ def _parse_datetime(s):
     raise ValueError(s)
 
 
-for x in [datetime.date, 'date']:
+for _x in [datetime.date, 'date']:
     register_spec(
-        x,
+        _x,
         dict(
             names=['date', 'd'],
             from_string=_parse_date,
@@ -57,9 +76,9 @@ for x in [datetime.date, 'date']:
     )
 
 
-for x in [datetime.datetime, 'datetime']:
+for _x in [datetime.datetime, 'datetime']:
     register_spec(
-        x,
+        _x,
         dict(
             names=['timestamp', 't'],
             from_string=_parse_datetime,
@@ -72,9 +91,9 @@ for x in [datetime.datetime, 'datetime']:
 ################################################################################
 # pathlib.Path
 
-for x in [pathlib.Path, 'path']:
+for _x in [pathlib.Path, 'path']:
     register_spec(
-        x,
+        _x,
         dict(
             names=['path'],
             from_string=pathlib.Path,
