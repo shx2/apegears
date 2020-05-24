@@ -338,8 +338,13 @@ class ArgumentParser(_ap.ArgumentParser):
     # argcomplete
 
     def _pre_parse_argcomplete(self, *args, **kwargs):
-        if argcomplete is not None:
-            argcomplete.autocomplete(self)
+        if argcomplete is None:
+            return
+        if 'IntrospectiveArgumentParser' in type(self).__name__:
+            # this is a nested call triggered by previous call to argcomplete.autocomplete().
+            # avoid another call to argcomplete.autocomplete()
+            return
+        argcomplete.autocomplete(self)
 
     def _set_completer(self, action, completer):
         if action is not None and completer is not None:
