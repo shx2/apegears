@@ -72,9 +72,12 @@ class ArgumentParser(_ap.ArgumentParser):
     ################################################################################
     # add_argument()
 
-    def add_argument(self, *args, strict_default=False, completer=None, post_process=None, **kwargs):
+    def add_argument(self, *args,
+                     strict_default=False, post_process=None, completer=None,
+                     **kwargs):
         """
         :param strict_default: whether to enable workaround issue16399
+        :param post_process: a callable to apply to the argument post-parsing, in place
         :param completer: a custom argcomplete completer
         """
 
