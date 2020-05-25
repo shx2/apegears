@@ -52,6 +52,9 @@ class ArgumentParser(_ap.ArgumentParser):
         # call super:
         namespace, extras = super().parse_known_args(*args, **kwargs)
 
+        # run arg post processors:
+        self._run_post_processors(namespace)
+
         # enforce required args:
         self._enforce_required(namespace)
 
@@ -69,7 +72,7 @@ class ArgumentParser(_ap.ArgumentParser):
     ################################################################################
     # add_argument()
 
-    def add_argument(self, *args, strict_default=False, completer=None, **kwargs):
+    def add_argument(self, *args, strict_default=False, completer=None, post_process=None, **kwargs):
         """
         :param strict_default: whether to enable workaround issue16399
         :param completer: a custom argcomplete completer
@@ -91,6 +94,10 @@ class ArgumentParser(_ap.ArgumentParser):
 
         # call super:
         action = super().add_argument(*args, **kwargs)
+
+        # remember post processor for later
+        if post_process is not None:
+            action.post_process = post_process
 
         # argcomplete
         self._set_completer(action, completer)
@@ -297,7 +304,7 @@ class ArgumentParser(_ap.ArgumentParser):
             if v != spec.EMPTY:
                 kwargs.setdefault(attr, v)
 
-        for attr in ['choices', 'help', 'metavar', 'completer']:
+        for attr in ['post_process', 'choices', 'help', 'metavar', 'completer']:
             _setdefault(attr)
 
         if not kwargs.get('required', False):
@@ -384,6 +391,19 @@ class ArgumentParser(_ap.ArgumentParser):
                 _ap._('the following arguments are required: %s') %
                 ', '.join(empty_required_actions)
             )
+
+    def _run_post_processors(self, namespace):
+        for action in self._actions:
+            arg_name = action.dest
+            post_process = getattr(action, 'post_process', None)
+            if post_process is None:
+                continue
+            try:
+                arg_value = getattr(namespace, arg_name)
+            except AttributeError:
+                continue
+            new_arg_value = post_process(arg_value)
+            setattr(namespace, arg_name, new_arg_value)
 
     def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
 

@@ -24,11 +24,12 @@ class ArgParseSpec:
     EMPTY = object()
 
     def __init__(self,
-                 names=EMPTY, default=EMPTY, from_string=EMPTY,
+                 names=EMPTY, default=EMPTY, from_string=None, post_process=EMPTY,
                  choices=EMPTY, help=EMPTY, metavar=EMPTY, completer=EMPTY):
         self.names = names
         self.default = default
         self.from_string = from_string
+        self.post_process = post_process
         self.choices = choices
         self.help = help
         self.metavar = metavar

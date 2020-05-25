@@ -14,7 +14,9 @@ from argparse import *
 from .parser import ArgumentParser
 from .spec import register_spec
 
+from .iofile import fileinput
+
 # register standard python types (e.g. datetime.date, pathlib.Path)
 from . import types as _types
 
-ArgumentParser, register_spec, _types  # pyflakes
+ArgumentParser, register_spec, fileinput, _types  # pyflakes
