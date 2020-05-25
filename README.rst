@@ -27,6 +27,8 @@ The most common operations (e.g. defining flags and list arguments) are sometime
 Furthermore, it seems to be missing some useful options, such as support for ``dict`` arguments.
 Also, using arguments of custom types (using the ``type`` parameter) doesn't work as smoothly as you'd hope.
 
+Another annoyance is that when using ``FileType`` in write-mode, the output file is created very early (while
+parsing cli args), not giving the option in your script to decide not to write to it after all.
 
 
 
@@ -45,6 +47,8 @@ Following is an overview of the main features.  See below for more details on ea
 
   - E.g. ``range``, ``date``, ``datetime``, ``Path``, IP address, regular expression.
 
+- An alternative ``FileType`` argument type, better than ``argparse.FileType``.
+- Smooth integration with ``fileinput``.
 - Builtin support for enum arguments.
 - Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
 - Integration with other ``ArgumentParser``-related tools.
@@ -137,6 +141,45 @@ Another example::
     parser.parse_args('--indexes 0:100:10'.split()).indexes
     => range(0, 100, 10)
 
+
+Improved ``FileType``
+--------------------------
+
+The problem with ``argparse.FileType``, is that in write-mode, the file is opened (created)
+during cli-parsing, even in cases where you wouldn't want to write to the file.
+
+For example, if your script is using ``argparse`` and takes a positional output file (``mode='w'``),
+The following invocations will create an empty file named ``foo`` (deleting it if already exists)::
+
+    % myscript.py foo -h  # will create the file, and print help message
+    % myscript.py foo --no-such-option  # will create the file, and print argparse error message
+
+There are other cases where you would decide not to write to output file (e.g. you fail generating
+the content), but using ``argparse.FileType`` would still create an empty file (deleting existing
+one).
+
+The solution is using ``apegears.FileType`` instead, which lazily opens the file, when it is first
+accessed.
+
+
+
+``fileinput`` arguments
+--------------------------
+
+When you want to use `fileinput <https://docs.python.org/3/library/fileinput.html>`_ in
+your script, ``apegears`` can save you a few lines of code::
+
+    from apegears import ArgumentParser, fileinput
+    parser = ArgumentParser()
+    parser.add_positional(type=fileinput(decompress=True), nargs='*')
+    args = parser.parse_args()
+    for line in args.infiles:
+        ...
+
+
+Also, passing ``decompress=True`` handles compressed files better than using
+``fileinput`` directly with ``hook_compressed``
+(see `issue5758 <https://bugs.python.org/issue5758>`_).
 
 
 Enum arguments
