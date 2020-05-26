@@ -53,11 +53,18 @@ Following is an overview of the main features.  See below for more details on ea
 - Can extract `description <https://docs.python.org/3/library/argparse.html#description>`_
   from docstring of caller module, to avoid doc duplication
   (enable by passing: ``description=CALLER_DOC``)
-- Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
 - Integration with other ``ArgumentParser``-related tools.
 
   - `argcomplete <https://pypi.org/project/argcomplete/>`_
   - `func_argparse <https://pypi.org/project/func-argparse/>`_
+
+
+Avoiding ``argparse`` bugs:
+
+- `Issue16399 <https://bugs.python.org/issue16399>`_ *append-with-nonempty-default*:
+  apegears includes an easy-to-use workaround.
+- `Issue13041 <https://bugs.python.org/issue13041>`_ *terminal width is not detected properly*:
+  this is fixed in python 3.8, but using apegears avoids the issue for all version.
 
 
 Adder methods
