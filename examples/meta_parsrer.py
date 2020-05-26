@@ -26,7 +26,7 @@ Another example, for testing the strict_default flag:
 
 """
 
-from apegears import ArgumentParser, REMAINDER
+from apegears import ArgumentParser, CALLER_DOC, REMAINDER
 import builtins
 import enum
 
@@ -69,11 +69,7 @@ def nargs_type(x):
 ###############################################################################
 
 def get_meta_args():
-    parser = ArgumentParser(
-        description='''Creates an ArgumentParser with a single arg defined by CLI arguments, '''
-                    '''and parses the rest of CLI arguments using that parser.''',
-        argument_default=EMPTY,
-    )
+    parser = ArgumentParser(description=CALLER_DOC, argument_default=EMPTY)
 
     parser.add_positional('argform', type=ArgForm)
     parser.add_positional('argname')

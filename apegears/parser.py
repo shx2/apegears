@@ -4,6 +4,7 @@ Definition of the ApeGears ArgumentParser class.
 
 import argparse as _ap
 from collections import OrderedDict
+import inspect
 
 try:
     import argcomplete
@@ -12,6 +13,12 @@ except ImportError:
 
 from .misc import _ExtendAction, _SetItemAction, _KeyValueType, _StrictDefaultActionWrapper
 from .spec import find_spec as _find_spec
+
+
+################################################################################
+# Consts
+
+CALLER_DOC = ...
 
 
 ################################################################################
@@ -35,8 +42,18 @@ class ArgumentParser(_ap.ArgumentParser):
 
     ################################################################################
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, description=None, **kwargs):
+        """
+        :param description:
+            if description=CALLER_DOC, will attempt to extract description from docstring of
+            caller module.
+        """
+        # generate description:
+        if description is CALLER_DOC:
+            description = self._generate_descrption(stack_depth=1)
+
+        # call super:
+        super().__init__(*args, description=description, **kwargs)
 
         # register our actions
         self.register('action', 'extend', _ExtendAction)
@@ -515,6 +532,20 @@ class ArgumentParser(_ap.ArgumentParser):
             if not a or a[0] not in self.prefix_chars:
                 return True
         return False
+
+    def _generate_descrption(self, stack_depth):
+        try:
+            stack = inspect.stack()
+            caller_frame = stack[stack_depth + 1]
+            raw_doc = caller_frame.frame.f_globals['__doc__'].strip()
+            lines = raw_doc.splitlines()
+            # return text up to the first blank line:
+            i = lines.index('')
+            if i >= 0:
+                lines = lines[:i]
+            return '\n'.join(lines)
+        except (KeyError, IndexError, ValueError, TypeError):
+            return None
 
 
 ################################################################################

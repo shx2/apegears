@@ -50,6 +50,9 @@ Following is an overview of the main features.  See below for more details on ea
 - An alternative ``FileType`` argument type, better than ``argparse.FileType``.
 - Smooth integration with ``fileinput``.
 - Builtin support for enum arguments.
+- Can extract `description <https://docs.python.org/3/library/argparse.html#description>`_
+  from docstring of caller module, to avoid doc duplication
+  (enable by passing: ``description=CALLER_DOC``)
 - Easy-to-use workaround append-with-nonempty-default `bug <https://bugs.python.org/issue16399>`_.
 - Integration with other ``ArgumentParser``-related tools.
 
