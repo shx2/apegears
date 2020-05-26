@@ -119,14 +119,7 @@ class ArgumentParser(_ap.ArgumentParser):
             Supports all kwargs supported by ``add_argument``, except for action and required.
         """
 
-        names = [name] if name else []
-        names, kwargs = self._use_spec(*names, is_positional=True, **kwargs)
-
-        if names and names[0] and names[0][0] in self.prefix_chars:
-            raise ValueError('name of positional must not start with %r' % self.prefix_chars)
-        for k in ['action', 'required']:
-            if k in kwargs:
-                raise ValueError('%s= does not apply to positionals' % k)
+        names, kwargs = self._process_positional(name, **kwargs)
 
         nargs = kwargs.pop('nargs', None)
         if 'default' in kwargs:
@@ -215,6 +208,35 @@ class ArgumentParser(_ap.ArgumentParser):
         return self.add_argument(
             *flags,
             action='extend',
+            strict_default=strict_default,
+            **kwargs
+        )
+
+    def add_positional_list(self, name=None, strict_default=True, **kwargs):
+        """
+        Add a *positional* list argument.  This calls ``add_argument`` with appropriate values.
+
+        :param kwargs:
+            Supports all kwargs supported by ``add_argument``, except for action and required.
+            nargs is typically not required.
+        :param strict_default: whether to enable workaround issue16399
+
+        :note: The default default value is an empty list.
+        """
+
+        names, kwargs = self._process_positional(name, **kwargs)
+
+        nargs = kwargs.pop('nargs', None)
+        if nargs is None:
+            nargs = '*'
+        if not isinstance(nargs, int) and nargs not in '*+':
+            raise ValueError(
+                'nargs=%s does not apply to a positional list' % nargs)
+
+        return self.add_argument(
+            *names,
+            action=None,
+            nargs=nargs,
             strict_default=strict_default,
             **kwargs
         )
@@ -407,6 +429,19 @@ class ArgumentParser(_ap.ArgumentParser):
                 continue
             new_arg_value = post_process(arg_value)
             setattr(namespace, arg_name, new_arg_value)
+
+    def _process_positional(self, name, **kwargs):
+        names = [name] if name else []
+        names, kwargs = self._use_spec(*names, is_positional=True, **kwargs)
+
+        if names and names[0] and names[0][0] in self.prefix_chars:
+            raise ValueError('name of positional must not start with %r' % self.prefix_chars)
+
+        for k in ['action', 'required']:
+            if k in kwargs:
+                raise ValueError('%s= does not apply to positionals' % k)
+
+        return names, kwargs
 
     def _process_collection_optional(self, coll_cls, coll_cls_name, *flags, **kwargs):
 
