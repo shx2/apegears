@@ -10,9 +10,24 @@ For example::
     % meta_parsrer.py LIST dates --type date --required -- --dates 2020-03-03 2022-04-08
     dates = [datetime.date(2020, 3, 3), datetime.date(2022, 4, 8)]
 
+Another example, for testing the strict_default flag:
+
+    # Using argparse, demostrating issue16399:
+    % meta_parsrer.py ARGUMENT --foo --action append --default "['aa', 'bb']" -- --foo cc
+    foo = ['aa', 'bb', 'cc']
+
+    # List option with strict_default disabled reproduces the problem:
+    % meta_parsrer.py LIST foo --default "['aa', 'bb']" --no-strict-default -- --foo cc
+    foo = ['aa', 'bb', 'cc']
+
+    # List option by default avoid the problem:
+    % meta_parsrer.py LIST foo --default "['aa', 'bb']" -- --foo cc
+    foo = ['cc']
+
 """
 
 from apegears import ArgumentParser, REMAINDER
+import builtins
 import enum
 
 
@@ -27,6 +42,7 @@ class ArgForm(enum.Enum):
     FLAG = 3
     LIST = 4
     DICT = 5
+    ARGUMENT = 99
 
 
 class Action(enum.Enum):
@@ -63,15 +79,15 @@ def get_meta_args():
     parser.add_positional('argname')
 
     parser.add_optional('nargs', type=nargs_type)
-    parser.add_optional('default')
-    parser.add_optional('type')
+    parser.add_optional('default', type='literal')
+    parser.add_optional('type', type=lambda s: getattr(builtins, s, s))
     parser.add_optional('arghelp', dest='help', help='the "help" param')
     parser.add_optional('metavar')
     parser.add_optional('dest')
     parser.add_optional('action', type=Action)
-    parser.add_optional('const')
+    parser.add_optional('const', type='literal')
     parser.add_flag('required')
-    parser.add_flag('strict_default')
+    parser.add_flag('strict-default')
 
     args, rest = parser.parse_known_args()
 
@@ -86,6 +102,8 @@ def create_argparser(meta_args):
     kwargs = {k: v for k, v in vars(meta_args).items() if v != EMPTY}
     argname = kwargs.pop('argname')
     argform = kwargs.pop('argform')
+    if 'action' in kwargs:
+        kwargs['action'] = kwargs['action'].value
 
     adder = getattr(parser, 'add_%s' % argform.name.lower())
     print('# %s %r' % (adder.__name__, kwargs))

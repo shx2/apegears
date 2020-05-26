@@ -45,7 +45,7 @@ Following is an overview of the main features.  See below for more details on ea
 - Defining custom argument-types is simpler and more powerful, using "specs".
 - Builtin support for some standard python types.
 
-  - E.g. ``range``, ``date``, ``datetime``, ``Path``, IP address, regular expression.
+  - E.g. ``range``, ``date``, ``datetime``, ``Path``, literals, IP address, regular expression.
 
 - An alternative ``FileType`` argument type, better than ``argparse.FileType``.
 - Smooth integration with ``fileinput``.
@@ -127,7 +127,7 @@ Argument types for standard python types
 ------------------------------------------
 
 Argument type specs are predefined for some standard python types.
-E.g., range, date, datetime, path, IP address, regular expression.
+E.g., range, date, datetime, path, literals, IP address, regular expression.
 
 Can be used like this::
 
@@ -140,6 +140,12 @@ Another example::
     parser.add_optional('indexes', ..., type='range', ...)  # also works: type=range
     parser.parse_args('--indexes 0:100:10'.split()).indexes
     => range(0, 100, 10)
+
+Another example, for using literals (inspired by ``python-fire``):
+
+    parser.add_optional('val', ..., type='literal', ...)
+    parser.parse_args('--val {"four":4,"six":6}'.split()).val
+    {'four': 4, 'six': 6}  # this is a dict
 
 
 Improved ``FileType``

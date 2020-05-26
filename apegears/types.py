@@ -13,6 +13,7 @@ Included here:
 
 import datetime
 import pathlib
+import ast
 import re
 import ipaddress
 
@@ -128,5 +129,31 @@ register_spec(
         help='an IP address, e.g. "192.168.0.1" or "2001:db8::"'
     ),
 )
+
+
+################################################################################
+# literal
+
+# NOTE: python-fire does the same thing, and much better.
+# consider replacing this with its DefaultParseValue() function.
+def _parse_literal(s):
+    try:
+        # ast.literal_eval supports the following types:
+        # strings, bytes, numbers, tuples, lists, dicts, sets, booleans, and None
+        return ast.literal_eval(s)
+    except (SyntaxError, ValueError):
+        # If literal_eval can't parse the value, treat it as a string.
+        return s
+
+
+register_spec(
+    'literal',
+    dict(
+        from_string=_parse_literal,
+        metavar='LITERAL',
+        help='a python literal'
+    ),
+)
+
 
 ################################################################################
