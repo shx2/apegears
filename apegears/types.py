@@ -13,6 +13,7 @@ Included here:
 
 import datetime
 import pathlib
+import logging
 import ast
 import re
 import ipaddress
@@ -101,6 +102,28 @@ for _x in [pathlib.Path, 'path']:
             metavar='PATH',
         ),
     )
+
+
+################################################################################
+# log level
+
+def _parse_log_level(s):
+    try:
+        # try int
+        val = int(s)
+    except ValueError:
+        val = logging._nameToLevel[s.upper()]
+    return logging._levelToName[val]
+
+
+register_spec(
+    'log_level',
+    dict(
+        names=['log-level', 'L'],
+        from_string=_parse_log_level,
+        metavar='LOG_LEVEL',
+    ),
+)
 
 
 ################################################################################
