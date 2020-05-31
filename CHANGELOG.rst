@@ -1,3 +1,10 @@
+0.2.1
+-----
+* Support for new arg types: ``log level``, ``literal``.
+* New adder methods: add_positional_list
+* Support extracting description from docstring of caller module
+* Workaround Issue13041: terminal width is not detected properly
+
 0.2.0
 -----
 * Support for new arg types: ``range``, ``fileinput``.
