@@ -108,12 +108,25 @@ for _x in [pathlib.Path, 'path']:
 # log level
 
 def _parse_log_level(s):
+    val = None
     try:
         # try int
         val = int(s)
     except ValueError:
-        val = logging._nameToLevel[s.upper()]
-    return logging._levelToName[val]
+        pass
+    if val is None:
+        for name in [s, s.upper()]:
+            try:
+                val = logging._nameToLevel[name]
+                break
+            except KeyError:
+                pass
+    if val is not None:
+        try:
+            return logging._levelToName[val]
+        except KeyError:
+            pass
+    raise ValueError(s)
 
 
 register_spec(
