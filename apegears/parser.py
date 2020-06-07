@@ -13,6 +13,7 @@ except ImportError:
 
 from .misc import _ExtendAction, _SetItemAction, _KeyValueType, _StrictDefaultActionWrapper
 from .spec import find_spec as _find_spec
+from .lo99ing import add_log_levels_option
 
 
 ################################################################################
@@ -42,11 +43,17 @@ class ArgumentParser(_ap.ArgumentParser):
 
     ################################################################################
 
-    def __init__(self, *args, description=None, **kwargs):
+    def __init__(self, *args, description=None, log_levels=None, **kwargs):
         """
         :param description:
             if description=CALLER_DOC, will attempt to extract description from docstring of
             caller module.
+        :param log_levels:
+            lo99ing integration.
+            a flag indicating whether to automatically add a log-level override option
+            (-L/--log-level).
+            if log_levels=None (default), will automatically add it only if the lo99ing package
+            is found.
         """
         # generate description:
         if description is CALLER_DOC:
@@ -58,6 +65,10 @@ class ArgumentParser(_ap.ArgumentParser):
         # register our actions
         self.register('action', 'extend', _ExtendAction)
         self.register('action', 'setitem', _SetItemAction)
+
+        # add default options
+        if log_levels or log_levels is None:
+            add_log_levels_option(self, force=bool(log_levels))
 
     ################################################################################
     # parse_args()
