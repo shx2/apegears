@@ -1,3 +1,8 @@
+Next
+-----
+* ``lo99ing`` integration -- automatically add -L/--log-level option, for log-level overrides
+  from cli.
+
 0.2.1
 -----
 * Support for new arg types: ``log level``, ``literal``.

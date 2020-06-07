@@ -50,6 +50,7 @@ Following is an overview of the main features.  See below for more details on ea
 - An alternative ``FileType`` argument type, better than ``argparse.FileType``.
 - Smooth integration with ``fileinput``.
 - Builtin support for enum arguments.
+- Builtin support for overriding log levels from cli, using `lo99ing <https://pypi.org/project/lo99ing/>`_.
 - Can extract `description <https://docs.python.org/3/library/argparse.html#description>`_
   from docstring of caller module, to avoid doc duplication
   (enable by passing: ``description=CALLER_DOC``)
@@ -212,6 +213,17 @@ Enum types are also supported as argument types::
     parser.add_optional(type=Direction)
     parser.parse_args('--direction LEFT'.split()).direction
     => <Direction.LEFT: 3>
+
+
+Overriding log levels from cli
+--------------------------------
+
+If you're using `lo99ing <https://pypi.org/project/lo99ing/>`_, the parser automatically
+includes a -L/--log-level option for overriding log levels from cli.
+
+E.g., to override from cli::
+
+    myscript.py -L mylogger.traffic=debug yourlogger=error
 
 
 The append-with-nonempty-default issue
