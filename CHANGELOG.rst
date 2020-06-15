@@ -1,14 +1,14 @@
-Next
+0.2.2
 -----
-* ``lo99ing`` integration -- automatically add -L/--log-level option, for log-level overrides
-  from cli.
+* ``lo99ing`` integration -- automatically add -L/--log-level option, for log-level overrides from cli.
+* bug fixes.
 
 0.2.1
 -----
 * Support for new arg types: ``log level``, ``literal``.
-* New adder methods: add_positional_list
-* Support extracting description from docstring of caller module
-* Workaround Issue13041: terminal width is not detected properly
+* New adder methods: add_positional_list.
+* Support extracting description from docstring of caller module.
+* Workaround Issue13041: terminal width is not detected properly.
 
 0.2.0
 -----
