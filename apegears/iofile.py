@@ -6,6 +6,9 @@ import os
 import os.path
 import argparse as _ap
 import fileinput as _fileinput
+import pickle
+
+from .spec import register_spec
 
 
 ################################################################################
@@ -50,7 +53,7 @@ class FileInputType:
 fileinput = FileInputType
 
 
-def hook_compressed(filename, mode):
+def open_compressed(filename, mode):
     """
     An alternative implemenation for ``fileinput.hook_compressed``, which partially
     works around Issue5758 ("fileinput.hook_compressed returning bytes from gz file").
@@ -75,6 +78,9 @@ def hook_compressed(filename, mode):
         return bz2.BZ2File(filename, fix_mode(mode))
     else:
         return open(filename, mode)
+
+
+hook_compressed = open_compressed
 
 
 ################################################################################
@@ -179,6 +185,25 @@ def _is_writeable(fnm):
             pdir = '.'
     # target is creatable if parent dir is writable
     return os.access(pdir, os.W_OK)
+
+
+################################################################################
+# Pickle types
+
+
+def _read_pickle(fn, mode='rb'):
+    with open_compressed(fn, mode) as F:
+        return pickle.load(F)
+
+
+register_spec(
+    'pickled_data',
+    dict(
+        from_string=_read_pickle,
+        metavar='PKL_FILE',
+        help='pickle file (optionally compressed)'
+    ),
+)
 
 
 ################################################################################
