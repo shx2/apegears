@@ -182,7 +182,7 @@ def _is_writeable(fnm):
     # target does not exist, check perms on parent dir
     pdir = os.path.dirname(fnm)
     if not pdir:
-            pdir = '.'
+        pdir = '.'
     # target is creatable if parent dir is writable
     return os.access(pdir, os.W_OK)
 

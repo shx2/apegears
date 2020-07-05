@@ -1,3 +1,7 @@
+0.2.3
+-----
+* Support for new arg type: ``pickled_data``.
+
 0.2.2
 -----
 * ``lo99ing`` integration -- automatically add -L/--log-level option, for log-level overrides from cli.
