@@ -455,7 +455,7 @@ class ArgumentParser(_ap.ArgumentParser):
                 arg_value = getattr(namespace, arg_name)
             except AttributeError:
                 continue
-            new_arg_value = post_process(arg_value)
+            new_arg_value = post_process(arg_value, action=action, namespace=namespace, parser=self)
             setattr(namespace, arg_name, new_arg_value)
 
     def _process_positional(self, name, **kwargs):

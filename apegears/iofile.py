@@ -45,7 +45,7 @@ class FileInputType:
     def __argparse__(self):
         return dict(
             names=['infiles'],
-            post_process=self.get_fileinput,
+            post_process=lambda files, **kw: self.get_fileinput(files),
             metavar='INFILE',
         )
 

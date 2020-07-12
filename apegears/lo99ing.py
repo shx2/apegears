@@ -29,7 +29,7 @@ def add_log_levels_option(parser, *args, force=False, **kwargs):
     )
 
 
-def _post_process_log_levels(cli_levels):
+def _post_process_log_levels(cli_levels, **kwargs):
     logger = lo99ing.get_logger('lo99ing')
     for logger_name, level in cli_levels.items():
         logger.info('LOG LEVEL OVERRIDE: %s = %s', logger_name, level)
