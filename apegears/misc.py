@@ -1,5 +1,5 @@
 """
-Private definitions of actions, types, etc. used in this pacakge.
+Private definitions of actions, types, etc. used in this package.
 """
 
 import argparse as _ap
@@ -89,7 +89,7 @@ class _KeyValueType:
         return (key, value)
 
     def __repr__(self):
-        # defiend for nicer error messages
+        # defined for nicer error messages
         return '%s=%s' % (
             self._type_metavar(self.key_type, 'KEY'),
             self._type_metavar(self.value_type, 'VALUE'),

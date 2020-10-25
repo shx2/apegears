@@ -6,6 +6,7 @@ import unittest
 import datetime
 import pathlib
 import ipaddress
+from os import path
 from enum import Enum
 
 from apegears import ArgumentParser as AP, register_spec
@@ -213,7 +214,7 @@ class TypeIntegrationTest(unittest.TestCase):
         self.assertIsNone(r.match(nomatch))
 
     def test_path(self):
-        p = 'a/b/c.zip'
+        p = path.join('a', 'b', 'c.zip')
         self.assertEqual(
             self._parse('positional', type='path', cli_args=p).path, pathlib.Path(p))
 

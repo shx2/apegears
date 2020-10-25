@@ -1,5 +1,5 @@
 """
-``ApeGeargs`` <-> ``lo99ing`` integration.
+``ApeGears`` <-> ``lo99ing`` integration.
 
 If lo99ing is installed, a -L/--log-levels option is automatically added to parsers,
 to allow setting log-level overrides from cli.

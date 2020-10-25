@@ -7,12 +7,12 @@ Useful for quick testing of ArgumentParser.
 
 For example::
 
-    % meta_parsrer.py LIST dates --type date --required -- --dates 2020-03-03 2022-04-08
+    % meta_parser.py LIST dates --type date --required -- --dates 2020-03-03 2022-04-08
     dates = [datetime.date(2020, 3, 3), datetime.date(2022, 4, 8)]
 
 Another example, for testing the strict_default flag:
 
-    # Using argparse, demostrating issue16399:
+    # Using argparse, demonstrating issue16399:
     % meta_parsrer.py ARGUMENT --foo --action append --default "['aa', 'bb']" -- --foo cc
     foo = ['aa', 'bb', 'cc']
 

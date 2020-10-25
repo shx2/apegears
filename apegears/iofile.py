@@ -55,7 +55,7 @@ fileinput = FileInputType
 
 def open_compressed(filename, mode):
     """
-    An alternative implemenation for ``fileinput.hook_compressed``, which partially
+    An alternative implementation for ``fileinput.hook_compressed``, which partially
     works around Issue5758 ("fileinput.hook_compressed returning bytes from gz file").
     """
     ext = os.path.splitext(filename)[1]
@@ -88,7 +88,7 @@ hook_compressed = open_compressed
 
 class LazyOpenFile:
     """
-    Lzay-open functionality.  Can be used instead of builtin ``open`` function.
+    Lazy-open functionality.  Can be used instead of builtin ``open`` function.
 
     Upon calling ``LazyOpenFile(...)``, it checks the file can be opened, but
     doesn't actually open it (in read mode, it might be opened and closed immediately).
@@ -151,7 +151,7 @@ class FileType(_ap.FileType):
     Same as ``argparse.FileType``, but in write-mode (w/a/x), the file
     is opened lazily, to avoid creating a file before we actually need to.
 
-    The lazy functionality is implementeed in ``LazyOpenFile``.
+    The lazy functionality is implemented in ``LazyOpenFile``.
     """
 
     def __call__(self, string):

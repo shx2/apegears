@@ -12,7 +12,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 # Read version info from apegears/version.py
 version_vars = {}
-with open("apegears/version.py") as fp:
+with open(path.join("apegears", "version.py")) as fp:
     exec(fp.read(), version_vars)
 version_string = version_vars['__version_string__']
 

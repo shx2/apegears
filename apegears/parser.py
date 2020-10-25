@@ -57,7 +57,7 @@ class ArgumentParser(_ap.ArgumentParser):
         """
         # generate description:
         if description is CALLER_DOC:
-            description = self._generate_descrption(stack_depth=1)
+            description = self._generate_description(stack_depth=1)
 
         # call super:
         super().__init__(*args, description=description, **kwargs)
@@ -170,12 +170,12 @@ class ArgumentParser(_ap.ArgumentParser):
         Add an *optional* parameter.  This calls ``add_argument`` with appropriate values.
 
         :param flags:
-            supports flags with prefix ("-", "--") omitted. Prefix will be added automaticallly.
+            supports flags with prefix ("-", "--") omitted. Prefix will be added automatically.
         :param kwargs:
             supports all kwargs supported by ``add_argument``.
 
         :note: "optional" is ``argparse``'s way of saying "non-positional".  An "optional" argument
-            is non-positional, but is not necessarilly *optional*, i.e. you can set required=True.
+            is non-positional, but is not necessarily *optional*, i.e. you can set required=True.
         """
         flags, kwargs = self._use_spec(*flags, is_positional=False, **kwargs)
         if not flags:
@@ -544,7 +544,7 @@ class ArgumentParser(_ap.ArgumentParser):
                 return True
         return False
 
-    def _generate_descrption(self, stack_depth):
+    def _generate_description(self, stack_depth):
         try:
             stack = inspect.stack()
             caller_frame = stack[stack_depth + 1]

@@ -41,7 +41,7 @@ class ArgParseSpec:
 
 
 def find_spec(cls):
-    # first try the registy
+    # first try the registry
     try:
         return _SPEC_REGISTRY[cls]
     except KeyError:
@@ -103,7 +103,7 @@ class _EnumValueType:
 
     @property
     def __name__(self):
-        # defiend for nicer error messages
+        # defined for nicer error messages
         return self.enum_cls.__name__
 
     @property
